@@ -3,5 +3,4 @@ pandas
 sqlalchemy
 psycopg2-binary
 bcrypt
-smtplib
 email
