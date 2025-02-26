@@ -1,7 +1,7 @@
 streamlit
 pandas
-fpdf
 sqlalchemy
+psycopg2-binary
 bcrypt
-psycopg2
 smtplib
+email
