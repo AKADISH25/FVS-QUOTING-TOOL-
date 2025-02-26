@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS quotes (
 # Add Admin User
 admin_username = "fvs_quoting_db_user"
 admin_password = "5st51KNF3Urk7HDnEFq72YAuBfTqMY4t" 
-hashed_password = hash_password(admin_password)
+hashed_password = admin123
 
 conn.execute(text("""
 INSERT INTO users (username, password, role)
