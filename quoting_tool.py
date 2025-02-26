@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # Database Connection (PostgreSQL on Render)
-DATABASE_URL = "your_database_url"  # Replace with your actual database URL from Render
+DATABASE_URL = "postgresql://fvs_quoting_db_user:5st51KNF3Urk7HDnEFq72YAuBfTqMY4t@dpg-cuv8nc0gph6c73eojj0g-a.oregon-postgres.render.com/fvs_quoting_db"  # Replace with your actual database URL from Render
 engine = create_engine(DATABASE_URL)
 conn = engine.connect()
 
