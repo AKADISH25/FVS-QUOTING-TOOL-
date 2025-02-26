@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, text
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    st.error("DATABASE_URL is missing! Check Streamlit Secrets.")
+    st.error("postgresql://fvs_quoting_db_user:5st51KNF3Urk7HDnEFq72YAuBfTqMY4t@dpg-cuv8nc0gph6c73eojj0g-a.oregon-postgres.render.com/fvs_quoting_db")
     st.stop()
 
 # 🔹 Connect to PostgreSQL Database
