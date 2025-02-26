@@ -1,0 +1,7 @@
+streamlit
+pandas
+fpdf
+sqlalchemy
+bcrypt
+psycopg2
+smtplib
