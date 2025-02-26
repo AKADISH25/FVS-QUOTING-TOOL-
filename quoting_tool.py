@@ -87,7 +87,7 @@ if not st.session_state["logged_in"]:
             st.session_state["logged_in"] = True
             st.session_state["username"] = username
             st.sidebar.success("Login Successful!")
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.sidebar.error("Invalid credentials. Please try again.")
 
