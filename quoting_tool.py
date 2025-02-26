@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS quotes (
 """))
 
 # Add Admin User
-admin_username = "alex"
-admin_password = "Mustang25" 
+admin_username = "fvs_quoting_db_user"
+admin_password = "5st51KNF3Urk7HDnEFq72YAuBfTqMY4t" 
 hashed_password = hash_password(admin_password)
 
 conn.execute(text("""
