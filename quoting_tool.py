@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS quotes (
 
 # Add Admin User
 admin_username = "alex"
-admin_password = "Mustang25"  # Change this before deployment!
+admin_password = "Mustang25" 
 hashed_password = hash_password(admin_password)
 
 conn.execute(text("""
