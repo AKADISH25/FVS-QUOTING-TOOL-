@@ -8,36 +8,46 @@ from sqlalchemy import create_engine, text
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    st.error("postgresql://fvs_quoting_db_user:5st51KNF3Urk7HDnEFq72YAuBfTqMY4t@dpg-cuv8nc0gph6c73eojj0g-a.oregon-postgres.render.com/fvs_quoting_db")
+    st.error("DATABASE_URL is missing! Check Streamlit Secrets.")
     st.stop()
 
 # 🔹 Connect to PostgreSQL Database
 engine = create_engine(DATABASE_URL)
 conn = engine.connect()
 
-# 🔹 Ensure Users Table Exists
+# 🔹 Ensure Users Table Exists Without Duplicates
 conn.execute(text("""
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    role TEXT NOT NULL
-)
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'users') THEN 
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
+        );
+    END IF;
+END $$;
 """))
 conn.commit()
 
-# 🔹 Ensure Quotes Table Exists
+# 🔹 Ensure Quotes Table Exists Without Duplicates
 conn.execute(text("""
-CREATE TABLE IF NOT EXISTS quotes (
-    id SERIAL PRIMARY KEY,
-    part_number TEXT,
-    description TEXT,
-    quantity INTEGER,
-    msrp_total REAL,
-    fvs_price_total REAL,
-    labor_cost REAL,
-    email TEXT
-)
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'quotes') THEN 
+        CREATE TABLE quotes (
+            id SERIAL PRIMARY KEY,
+            part_number TEXT,
+            description TEXT,
+            quantity INTEGER,
+            msrp_total REAL,
+            fvs_price_total REAL,
+            labor_cost REAL,
+            email TEXT
+        );
+    END IF;
+END $$;
 """))
 conn.commit()
 
@@ -123,18 +133,5 @@ if st.session_state["logged_in"]:
                 INSERT INTO quotes (part_number, description, quantity, msrp_total, fvs_price_total, labor_cost, email)
                 VALUES (:part, :desc, :qty, :msrp, :fvs_price, :labor_cost, :email)
             """), {"part": row[0], "desc": row[1], "qty": row[2], "msrp": row[3], "fvs_price": row[4], "labor_cost": labor_cost, "email": customer_email})
-
         conn.commit()
         st.success("Quote saved successfully!")
-
-    # 🔹 Admin Dashboard
-    if st.session_state["username"] == "admin":
-        st.sidebar.subheader("Admin Panel")
-
-        if st.sidebar.button("View Quotes"):
-            quotes = conn.execute(text("SELECT * FROM quotes")).fetchall()
-            st.write(pd.DataFrame(quotes, columns=["ID", "Part", "Description", "Quantity", "MSRP", "FVS Price", "Labor Cost", "Email"]))
-
-        if st.sidebar.button("Manage Users"):
-            users = conn.execute(text("SELECT * FROM users")).fetchall()
-            st.write(pd.DataFrame(users, columns=["ID", "Username", "Password (hashed)", "Role"]))
