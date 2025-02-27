@@ -35,9 +35,9 @@ labor_hours = st.number_input("Labor Hours", min_value=0.0, value=0.0, step=0.5)
 # Quoting System
 st.header("Select Components")
 parts_list = [
-    {"Part Number": "100SDU-A", "Description": "SPIRE, SHORT STD, DIECAST", "MSRP": 263, "Cost": 128.87},
-    {"Part Number": "200NS-TALL", "Description": "BRANCH GUARD, NIGHTSPIRE", "MSRP": 85, "Cost": 41.65},
-    {"Part Number": "210238-S-MP6", "Description": "MASTERPACK, 6PC", "MSRP": 276, "Cost": 135.24},
+    {"Part Number": "100SDU-A", "Description": "SPIRE, SHORT STD, DIECAST", "MSRP EA": 263, "Cost EA": 128.87},
+    {"Part Number": "200NS-TALL", "Description": "BRANCH GUARD, NIGHTSPIRE", "MSRP EA": 85, "Cost EA": 41.65},
+    {"Part Number": "210238-S-MP6", "Description": "MASTERPACK, 6PC", "MSRP EA": 276, "Cost EA": 135.24},
 ]
 master_data_df = pd.DataFrame(parts_list)
 
@@ -52,16 +52,15 @@ if st.button("Generate Quote"):
     quote_data = []
     for part, qty in part_quantities.items():
         part_info = master_data_df[master_data_df["Part Number"] == part].iloc[0]
-        cost = float(part_info["Cost"]) * qty
-        msrp = float(part_info["MSRP"]) * qty
-        customer_price = cost * (1 + parts_markup / 100)
-        quote_data.append([part, part_info["Description"], qty, msrp, customer_price, cost])
-    
-    labor_cost = labor_hours * labor_rate
+        msrp_total = float(part_info["MSRP EA"]) * qty
+        cost_total = float(part_info["Cost EA"]) * qty
+        customer_price = cost_total * (1 + parts_markup / 100)
+        total_cost_per_build = cost_total
+        labor_cost = labor_hours * labor_rate
+        quote_data.append([part, part_info["Description"], part_info["MSRP EA"], "-", customer_price, qty, "-", part_info["Cost EA"], total_cost_per_build, labor_hours])
     
     # Create DataFrame
-    quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "Quantity", "MSRP", "Customer Price", "Cost"])
-    quote_df.loc[len(quote_df)] = ["LABOR", "Labor Charges", "-", "-", labor_cost, "-"]
+    quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
     
     st.success("Quote generated successfully!")
     
