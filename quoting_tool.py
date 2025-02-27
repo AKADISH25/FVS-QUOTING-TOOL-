@@ -28,7 +28,7 @@ BEGIN
             description TEXT,
             quantity INTEGER,
             msrp REAL,
-            fvs_price REAL,
+            customer_price REAL,
             cost REAL,
             labor_cost REAL,
             labor_rate REAL,
@@ -47,8 +47,17 @@ st.header("Customer Information")
 customer_name = st.text_input("Customer Name")
 customer_email = st.text_input("Customer Email")
 
+# Default values from Internal Worksheet
+default_markup = 15.0  # Markup percentage
+default_labor_rate = 100.0  # Labor rate per hour
+
+# Adjustable labor rate and markup
+parts_markup = st.number_input("Parts Markup (%)", min_value=0.0, value=default_markup, step=1.0)
+labor_rate = st.number_input("Labor Rate ($ per hour)", min_value=0.0, value=default_labor_rate, step=5.0)
+labor_hours = st.number_input("Labor Hours", min_value=0.0, value=0.0, step=0.5)
+
 # Quoting System
-st.header("Create a Quote")
+st.header("Select Components")
 parts_list = [
     {"Part Number": "100SDU-A", "Description": "SPIRE, SHORT STD, DIECAST", "MSRP": 263, "Cost": 128.87},
     {"Part Number": "200NS-TALL", "Description": "BRANCH GUARD, NIGHTSPIRE", "MSRP": 85, "Cost": 41.65},
@@ -56,7 +65,6 @@ parts_list = [
 ]
 master_data_df = pd.DataFrame(parts_list)
 
-# Select parts
 selected_parts = st.multiselect("Select Parts", master_data_df["Part Number"].tolist())
 part_quantities = {}
 
@@ -64,19 +72,14 @@ for part in selected_parts:
     qty = st.number_input(f"Quantity for {part}", min_value=1, value=1)
     part_quantities[part] = qty
 
-# Adjustable labor rate and markup
-labor_hours = st.number_input("Labor Hours", min_value=0.0, value=0.0, step=0.5)
-labor_rate = st.number_input("Labor Rate ($ per hour)", min_value=0.0, value=100.0, step=5.0)
-parts_markup = st.number_input("Parts Markup (%)", min_value=0.0, value=15.0, step=1.0)
-
 if st.button("Generate Quote"):
     quote_data = []
     for part, qty in part_quantities.items():
         part_info = master_data_df[master_data_df["Part Number"] == part].iloc[0]
         cost = float(part_info["Cost"]) * qty
         msrp = float(part_info["MSRP"]) * qty
-        fvs_price = cost * (1 + parts_markup / 100)
-        quote_data.append([part, part_info["Description"], qty, msrp, fvs_price, cost])
+        customer_price = cost * (1 + parts_markup / 100)
+        quote_data.append([part, part_info["Description"], qty, msrp, customer_price, cost])
     
     labor_cost = labor_hours * labor_rate
     
@@ -87,8 +90,8 @@ if st.button("Generate Quote"):
     # Save Quote to Database
     for row in quote_data:
         conn.execute(text("""
-            INSERT INTO quotes (customer_name, customer_email, part_number, description, quantity, msrp, fvs_price, cost, labor_cost, labor_rate, parts_markup)
-            VALUES (:customer_name, :customer_email, :part, :desc, :qty, :msrp, :fvs_price, :cost, :labor_cost, :labor_rate, :parts_markup)
+            INSERT INTO quotes (customer_name, customer_email, part_number, description, quantity, msrp, customer_price, cost, labor_cost, labor_rate, parts_markup)
+            VALUES (:customer_name, :customer_email, :part, :desc, :qty, :msrp, :customer_price, :cost, :labor_cost, :labor_rate, :parts_markup)
         """), {
             "customer_name": customer_name,
             "customer_email": customer_email,
@@ -96,7 +99,7 @@ if st.button("Generate Quote"):
             "desc": row[1],
             "qty": row[2],
             "msrp": row[3],
-            "fvs_price": row[4],
+            "customer_price": row[4],
             "cost": row[5],
             "labor_cost": labor_cost,
             "labor_rate": labor_rate,
