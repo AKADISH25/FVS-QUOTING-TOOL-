@@ -90,14 +90,14 @@ if st.button("Generate Quote"):
     # PDF Generation
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Quote: {quote_number}", new_x="LMARGIN", new_y="NEXT", align='C')
-    pdf.cell(200, 10, txt=f"Company: {company_name}", new_x="LMARGIN", new_y="NEXT", align='C')
-    pdf.cell(200, 10, txt=f"Due Date: {due_date.strftime('%Y-%m-%d')}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.set_font("Helvetica", size=12)
+    pdf.cell(200, 10, text=f"Quote: {quote_number}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(200, 10, text=f"Company: {company_name}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(200, 10, text=f"Due Date: {due_date.strftime('%Y-%m-%d')}", new_x="LMARGIN", new_y="NEXT", align='C')
     pdf.ln(10)
     
     for index, row in quote_df.iterrows():
-        pdf.cell(200, 10, txt=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']:.2f}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(200, 10, text=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']:.2f}", new_x="LMARGIN", new_y="NEXT")
     
     pdf_output_path = os.path.join("/mnt/data", "quote.pdf")
     pdf.output(pdf_output_path)
