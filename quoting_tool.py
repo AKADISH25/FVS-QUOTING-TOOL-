@@ -15,30 +15,6 @@ if not DATABASE_URL:
 engine = create_engine(DATABASE_URL)
 conn = engine.connect()
 
-# Ensure Quotes Table Exists
-conn.execute(text("""
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'quotes') THEN 
-        CREATE TABLE quotes (
-            id SERIAL PRIMARY KEY,
-            customer_name TEXT,
-            customer_email TEXT,
-            part_number TEXT,
-            description TEXT,
-            quantity INTEGER,
-            msrp REAL,
-            customer_price REAL,
-            cost REAL,
-            labor_cost REAL,
-            labor_rate REAL,
-            parts_markup REAL
-        );
-    END IF;
-END $$;
-"""))
-conn.commit()
-
 # Streamlit App Interface
 st.title("Frontline Vehicle Solutions - Quoting Tool")
 
@@ -87,26 +63,7 @@ if st.button("Generate Quote"):
     quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "Quantity", "MSRP", "Customer Price", "Cost"])
     quote_df.loc[len(quote_df)] = ["LABOR", "Labor Charges", "-", "-", labor_cost, "-"]
     
-    # Save Quote to Database
-    for row in quote_data:
-        conn.execute(text("""
-            INSERT INTO quotes (customer_name, customer_email, part_number, description, quantity, msrp, customer_price, cost, labor_cost, labor_rate, parts_markup)
-            VALUES (:customer_name, :customer_email, :part, :desc, :qty, :msrp, :customer_price, :cost, :labor_cost, :labor_rate, :parts_markup)
-        """), {
-            "customer_name": customer_name,
-            "customer_email": customer_email,
-            "part": row[0],
-            "desc": row[1],
-            "qty": row[2],
-            "msrp": row[3],
-            "customer_price": row[4],
-            "cost": row[5],
-            "labor_cost": labor_cost,
-            "labor_rate": labor_rate,
-            "parts_markup": parts_markup
-        })
-    conn.commit()
-    st.success("Quote saved successfully!")
+    st.success("Quote generated successfully!")
     
     # Display Quote
     st.write("### Quote Summary")
