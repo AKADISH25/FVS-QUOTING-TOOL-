@@ -52,7 +52,7 @@ edited_df = st.data_editor(parts_list, num_rows="dynamic", key="quote_table")
 if st.button("Generate Quote"):
     for _, row in edited_df.iterrows():
         if pd.notna(row["Part Number"]):
-            qty = st.number_input(f"Quantity for {row['Part Number']}", min_value=1, value=1, key=row['Part Number'])
+            qty = st.number_input(f"Quantity for {row['Part Number']}", min_value=1, value=1, key=str(row['Part Number']))
             msrp_total = row["MSRP"] * qty
             cost_total = row["Cost"] * qty
             customer_price = cost_total * (1 + parts_markup / 100)
@@ -69,13 +69,13 @@ if st.button("Generate Quote"):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Quote: {quote_number}", ln=True, align='C')
-    pdf.cell(200, 10, txt=f"Company: {company_name}", ln=True, align='C')
-    pdf.cell(200, 10, txt=f"Due Date: {due_date}", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Quote: {quote_number}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(200, 10, txt=f"Company: {company_name}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(200, 10, txt=f"Due Date: {due_date}", new_x="LMARGIN", new_y="NEXT", align='C')
     pdf.ln(10)
     
     for index, row in quote_df.iterrows():
-        pdf.cell(200, 10, txt=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']}", ln=True)
+        pdf.cell(200, 10, txt=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']}", new_x="LMARGIN", new_y="NEXT")
     
     pdf_output_path = "quote.pdf"
     pdf.output(pdf_output_path)
