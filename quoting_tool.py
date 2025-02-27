@@ -8,7 +8,7 @@ from fpdf import FPDF
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    st.error("postgresql://fvs_quoting_db_user:5st51KNF3Urk7HDnEFq72YAuBfTqMY4t@dpg-cuv8nc0gph6c73eojj0g-a.oregon-postgres.render.com/fvs_quoting_db")
+    st.error("Database connection error. Please check the configuration.")
     st.stop()
 
 # Connect to PostgreSQL Database
@@ -37,8 +37,12 @@ labor_rate = st.number_input("Labor Rate ($ per hour)", min_value=0.0, value=def
 labor_hours = st.number_input("Labor Hours", min_value=0.0, value=0.0, step=0.5)
 
 # Fetch parts from the database
-query = text("SELECT part_number, description, msrp, cost FROM parts")
-parts_list = pd.read_sql(query, conn)
+try:
+    query = text("SELECT part_number, description, msrp, cost FROM parts")
+    parts_list = pd.read_sql(query, conn)
+except Exception as e:
+    st.error("Error fetching parts from database. Ensure the 'parts' table exists.")
+    parts_list = pd.DataFrame(columns=["part_number", "description", "msrp", "cost"])
 
 # Create table for multiple component selection
 st.write("### Add Components to Quote")
