@@ -49,10 +49,12 @@ labor_hours = st.number_input("Labor Hours", min_value=0.0, value=0.0, step=0.5)
 
 # Ensure correct column names
 expected_columns = ["Part Number", "Description", "MSRP", "Cost"]
-if all(col in parts_list.columns for col in expected_columns):
+missing_columns = [col for col in expected_columns if col not in parts_list.columns]
+
+if not missing_columns:
     parts_list = parts_list[expected_columns]
 else:
-    st.error("The MASTER PARTS TABLE does not have the expected columns. Check the file format.")
+    st.error(f"The MASTER PARTS TABLE is missing columns: {missing_columns}. Please check the file format.")
     parts_list = pd.DataFrame(columns=expected_columns)
 
 # Create table for multiple component selection
@@ -66,13 +68,19 @@ if st.button("Generate Quote"):
     for _, row in edited_df.iterrows():
         if pd.notna(row["Part Number"]):
             qty = st.number_input(f"Quantity for {row['Part Number']}", min_value=1, value=1, key=str(row['Part Number']))
-            msrp_total = row["MSRP"] * qty
-            cost_total = row["Cost"] * qty
-            customer_price = cost_total * (1 + parts_markup / 100)
+            msrp_total = row["MSRP"] * qty if pd.notna(row["MSRP"]) else 0
+            cost_total = row["Cost"] * qty if pd.notna(row["Cost"]) else 0
+            customer_price = cost_total * (1 + parts_markup / 100) if cost_total > 0 else 0
             total_cost_per_build = cost_total
-            quote_items.append([row["Part Number"], row["Description"], row["MSRP"], "-", customer_price, qty, msrp_total, row["Cost"], total_cost_per_build, labor_hours])
+            quote_items.append([
+                row["Part Number"], row["Description"], row["MSRP"], "-", customer_price,
+                qty, msrp_total, row["Cost"], total_cost_per_build, labor_hours
+            ])
     
-    quote_df = pd.DataFrame(quote_items, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
+    quote_df = pd.DataFrame(quote_items, columns=[
+        "Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", 
+        "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"
+    ])
     
     st.success("Quote generated successfully!")
     st.write("### Quote Summary")
@@ -84,13 +92,13 @@ if st.button("Generate Quote"):
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Quote: {quote_number}", new_x="LMARGIN", new_y="NEXT", align='C')
     pdf.cell(200, 10, txt=f"Company: {company_name}", new_x="LMARGIN", new_y="NEXT", align='C')
-    pdf.cell(200, 10, txt=f"Due Date: {due_date}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.cell(200, 10, txt=f"Due Date: {due_date.strftime('%Y-%m-%d')}", new_x="LMARGIN", new_y="NEXT", align='C')
     pdf.ln(10)
     
     for index, row in quote_df.iterrows():
-        pdf.cell(200, 10, txt=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(200, 10, txt=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']:.2f}", new_x="LMARGIN", new_y="NEXT")
     
-    pdf_output_path = "quote.pdf"
+    pdf_output_path = os.path.join("/mnt/data", "quote.pdf")
     pdf.output(pdf_output_path)
     
     with open(pdf_output_path, "rb") as pdf_file:
