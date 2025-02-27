@@ -27,9 +27,9 @@ BEGIN
             part_number TEXT,
             description TEXT,
             quantity INTEGER,
-            msrp_total REAL,
-            fvs_price_total REAL,
-            cost_total REAL,
+            msrp REAL,
+            fvs_price REAL,
+            cost REAL,
             labor_cost REAL,
             labor_rate REAL,
             parts_markup REAL
@@ -81,13 +81,13 @@ if st.button("Generate Quote"):
     labor_cost = labor_hours * labor_rate
     
     # Create DataFrame
-    quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "Quantity", "MSRP Total", "FVS Price Total", "Cost Total"])
+    quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "Quantity", "MSRP", "Customer Price", "Cost"])
     quote_df.loc[len(quote_df)] = ["LABOR", "Labor Charges", "-", "-", labor_cost, "-"]
     
     # Save Quote to Database
     for row in quote_data:
         conn.execute(text("""
-            INSERT INTO quotes (customer_name, customer_email, part_number, description, quantity, msrp_total, fvs_price_total, cost_total, labor_cost, labor_rate, parts_markup)
+            INSERT INTO quotes (customer_name, customer_email, part_number, description, quantity, msrp, fvs_price, cost, labor_cost, labor_rate, parts_markup)
             VALUES (:customer_name, :customer_email, :part, :desc, :qty, :msrp, :fvs_price, :cost, :labor_cost, :labor_rate, :parts_markup)
         """), {
             "customer_name": customer_name,
