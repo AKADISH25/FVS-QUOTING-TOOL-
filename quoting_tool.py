@@ -3,28 +3,19 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 
-# Check if /mnt/data exists before listing files
-if os.path.exists("/mnt/data"):
-    available_files = os.listdir("/mnt/data")
-    st.write("Available files:", available_files)
-else:
-    st.error("/mnt/data directory not found. Ensure correct file path.")
-    available_files = []
-
 # Load MASTER PARTS TABLE from Excel file
-excel_file_name = "MASTER PARTS TABLE .xlsx"
-excel_file_path = f"/mnt/data/{excel_file_name}"
+excel_file_path = "/mnt/data/MASTER PARTS TABLE .xlsx"
 
-if excel_file_name not in available_files:
-    st.error(f"File not found: {excel_file_path}. Please upload the file.")
-    parts_list = pd.DataFrame(columns=["Part Number", "Description", "MSRP", "Cost"])
-else:
+if os.path.exists(excel_file_path):
     try:
         parts_list = pd.read_excel(excel_file_path)
         st.success("Parts data loaded successfully from MASTER PARTS TABLE.")
     except Exception as e:
         st.error(f"Error loading parts table: {e}")
         parts_list = pd.DataFrame(columns=["Part Number", "Description", "MSRP", "Cost"])
+else:
+    st.error(f"File not found: {excel_file_path}. Please upload the file.")
+    parts_list = pd.DataFrame(columns=["Part Number", "Description", "MSRP", "Cost"])
 
 # Streamlit App Interface
 st.title("Frontline Vehicle Solutions - Quoting Tool")
