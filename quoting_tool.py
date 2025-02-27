@@ -43,22 +43,23 @@ master_data_df = pd.DataFrame(parts_list)
 
 selected_parts = st.multiselect("Select Parts", master_data_df["Part Number"].tolist())
 part_quantities = {}
+quote_data = []
 
 for part in selected_parts:
     qty = st.number_input(f"Quantity for {part}", min_value=1, value=1)
     part_quantities[part] = qty
+    part_info = master_data_df[master_data_df["Part Number"] == part].iloc[0]
+    msrp_total = float(part_info["MSRP EA"]) * qty
+    cost_total = float(part_info["Cost EA"]) * qty
+    customer_price = cost_total * (1 + parts_markup / 100)
+    total_cost_per_build = cost_total
+    quote_data.append([part, part_info["Description"], part_info["MSRP EA"], "-", customer_price, qty, msrp_total, part_info["Cost EA"], total_cost_per_build, labor_hours])
+    
+    # Display part details as they are added
+    st.write(f"**{part} - {part_info['Description']}**")
+    st.write(f"MSRP EA: ${part_info['MSRP EA']}, Cost EA: ${part_info['Cost EA']}, Customer Price EA: ${customer_price:.2f}")
 
 if st.button("Generate Quote"):
-    quote_data = []
-    for part, qty in part_quantities.items():
-        part_info = master_data_df[master_data_df["Part Number"] == part].iloc[0]
-        msrp_total = float(part_info["MSRP EA"]) * qty
-        cost_total = float(part_info["Cost EA"]) * qty
-        customer_price = cost_total * (1 + parts_markup / 100)
-        total_cost_per_build = cost_total
-        labor_cost = labor_hours * labor_rate
-        quote_data.append([part, part_info["Description"], part_info["MSRP EA"], "-", customer_price, qty, "-", part_info["Cost EA"], total_cost_per_build, labor_hours])
-    
     # Create DataFrame
     quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
     
