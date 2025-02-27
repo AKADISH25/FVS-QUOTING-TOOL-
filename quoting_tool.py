@@ -3,15 +3,22 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 
+# Check available files
+st.write("Available files:", os.listdir("/mnt/data"))
+
 # Load MASTER PARTS TABLE from Excel file
 excel_file_path = "/mnt/data/MASTER PARTS TABLE .xlsx"
 
-try:
-    parts_list = pd.read_excel(excel_file_path)
-    st.success("Parts data loaded successfully from MASTER PARTS TABLE.")
-except Exception as e:
-    st.error(f"Error loading parts table: {e}")
+if excel_file_path not in os.listdir("/mnt/data"):
+    st.error(f"File not found: {excel_file_path}. Please upload the file.")
     parts_list = pd.DataFrame(columns=["Part Number", "Description", "MSRP", "Cost"])
+else:
+    try:
+        parts_list = pd.read_excel(excel_file_path)
+        st.success("Parts data loaded successfully from MASTER PARTS TABLE.")
+    except Exception as e:
+        st.error(f"Error loading parts table: {e}")
+        parts_list = pd.DataFrame(columns=["Part Number", "Description", "MSRP", "Cost"])
 
 # Streamlit App Interface
 st.title("Frontline Vehicle Solutions - Quoting Tool")
