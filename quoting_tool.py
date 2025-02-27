@@ -1,8 +1,8 @@
 import os
 import streamlit as st
 import pandas as pd
-import bcrypt
 from sqlalchemy import create_engine, text
+from fpdf import FPDF
 
 # Load DATABASE_URL from Streamlit Secrets
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -22,10 +22,14 @@ st.title("Frontline Vehicle Solutions - Quoting Tool")
 st.header("Customer Information")
 customer_name = st.text_input("Customer Name")
 customer_email = st.text_input("Customer Email")
+company_name = st.text_input("Company Name")
+address = st.text_area("Company Address")
+quote_number = st.text_input("Quote Number", value="Q-1001")
+due_date = st.date_input("Valid Until")
 
-# Default values from Internal Worksheet
-default_markup = 15.0  # Markup percentage
-default_labor_rate = 100.0  # Labor rate per hour
+# Default values
+default_markup = 15.0
+default_labor_rate = 100.0
 
 # Adjustable labor rate and markup
 parts_markup = st.number_input("Parts Markup (%)", min_value=0.0, value=default_markup, step=1.0)
@@ -60,11 +64,27 @@ for part in selected_parts:
     st.write(f"MSRP EA: ${part_info['MSRP EA']}, Cost EA: ${part_info['Cost EA']}, Customer Price EA: ${customer_price:.2f}")
 
 if st.button("Generate Quote"):
-    # Create DataFrame
     quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
     
     st.success("Quote generated successfully!")
-    
-    # Display Quote
     st.write("### Quote Summary")
     st.dataframe(quote_df)
+    
+    # PDF Generation
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Quote: {quote_number}", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Company: {company_name}", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Customer: {customer_name}", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Due Date: {due_date}", ln=True, align='C')
+    pdf.ln(10)
+    
+    for index, row in quote_df.iterrows():
+        pdf.cell(200, 10, txt=f"{row['Part Number']} - {row['Description']} - Qty: {row['Quantity']} - Price: ${row['Price EA']}", ln=True)
+    
+    pdf_output_path = "quote.pdf"
+    pdf.output(pdf_output_path)
+    
+    with open(pdf_output_path, "rb") as pdf_file:
+        st.download_button("Download Quote PDF", pdf_file, file_name="quote.pdf", mime="application/pdf")
