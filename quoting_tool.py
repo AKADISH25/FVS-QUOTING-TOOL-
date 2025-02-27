@@ -1,19 +1,17 @@
 import os
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine, text
 from fpdf import FPDF
 
-# Load DATABASE_URL from Streamlit Secrets
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Load MASTER PARTS TABLE from Excel file
+excel_file_path = "/mnt/data/MASTER PARTS TABLE .xlsx"
 
-if not DATABASE_URL:
-    st.error("Database connection error. Please check the configuration.")
-    st.stop()
-
-# Connect to PostgreSQL Database
-engine = create_engine(DATABASE_URL)
-conn = engine.connect()
+try:
+    parts_list = pd.read_excel(excel_file_path)
+    st.success("Parts data loaded successfully from MASTER PARTS TABLE.")
+except Exception as e:
+    st.error(f"Error loading parts table: {e}")
+    parts_list = pd.DataFrame(columns=["Part Number", "Description", "MSRP", "Cost"])
 
 # Streamlit App Interface
 st.title("Frontline Vehicle Solutions - Quoting Tool")
@@ -36,13 +34,13 @@ parts_markup = st.number_input("Parts Markup (%)", min_value=0.0, value=default_
 labor_rate = st.number_input("Labor Rate ($ per hour)", min_value=0.0, value=default_labor_rate, step=5.0)
 labor_hours = st.number_input("Labor Hours", min_value=0.0, value=0.0, step=0.5)
 
-# Fetch parts from the database
-try:
-    query = text("SELECT part_number, description, msrp, cost FROM parts")
-    parts_list = pd.read_sql(query, conn)
-except Exception as e:
-    st.error("Error fetching parts from database. Ensure the 'parts' table exists.")
-    parts_list = pd.DataFrame(columns=["part_number", "description", "msrp", "cost"])
+# Ensure correct column names
+expected_columns = ["Part Number", "Description", "MSRP", "Cost"]
+if all(col in parts_list.columns for col in expected_columns):
+    parts_list = parts_list[expected_columns]
+else:
+    st.error("The MASTER PARTS TABLE does not have the expected columns. Check the file format.")
+    parts_list = pd.DataFrame(columns=expected_columns)
 
 # Create table for multiple component selection
 st.write("### Add Components to Quote")
@@ -53,13 +51,13 @@ edited_df = st.data_editor(parts_list, num_rows="dynamic", key="quote_table")
 
 if st.button("Generate Quote"):
     for _, row in edited_df.iterrows():
-        if pd.notna(row["part_number"]):
-            qty = st.number_input(f"Quantity for {row['part_number']}", min_value=1, value=1, key=row['part_number'])
-            msrp_total = row["msrp"] * qty
-            cost_total = row["cost"] * qty
+        if pd.notna(row["Part Number"]):
+            qty = st.number_input(f"Quantity for {row['Part Number']}", min_value=1, value=1, key=row['Part Number'])
+            msrp_total = row["MSRP"] * qty
+            cost_total = row["Cost"] * qty
             customer_price = cost_total * (1 + parts_markup / 100)
             total_cost_per_build = cost_total
-            quote_items.append([row["part_number"], row["description"], row["msrp"], "-", customer_price, qty, msrp_total, row["cost"], total_cost_per_build, labor_hours])
+            quote_items.append([row["Part Number"], row["Description"], row["MSRP"], "-", customer_price, qty, msrp_total, row["Cost"], total_cost_per_build, labor_hours])
     
     quote_df = pd.DataFrame(quote_items, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
     
