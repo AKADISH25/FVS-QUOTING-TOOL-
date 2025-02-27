@@ -45,26 +45,24 @@ parts_list = [
 ]
 master_data_df = pd.DataFrame(parts_list)
 
-selected_parts = st.multiselect("Select Parts", master_data_df["Part Number"].tolist())
-part_quantities = {}
-quote_data = []
+# Create table for multiple component selection
+st.write("### Add Components to Quote")
+quote_items = []
 
-for part in selected_parts:
-    qty = st.number_input(f"Quantity for {part}", min_value=1, value=1)
-    part_quantities[part] = qty
-    part_info = master_data_df[master_data_df["Part Number"] == part].iloc[0]
-    msrp_total = float(part_info["MSRP EA"]) * qty
-    cost_total = float(part_info["Cost EA"]) * qty
-    customer_price = cost_total * (1 + parts_markup / 100)
-    total_cost_per_build = cost_total
-    quote_data.append([part, part_info["Description"], part_info["MSRP EA"], "-", customer_price, qty, msrp_total, part_info["Cost EA"], total_cost_per_build, labor_hours])
-    
-    # Display part details as they are added
-    st.write(f"**{part} - {part_info['Description']}**")
-    st.write(f"MSRP EA: ${part_info['MSRP EA']}, Cost EA: ${part_info['Cost EA']}, Customer Price EA: ${customer_price:.2f}")
+# Editable DataFrame for multiple selections
+edited_df = st.data_editor(master_data_df, num_rows="dynamic", key="quote_table")
 
 if st.button("Generate Quote"):
-    quote_df = pd.DataFrame(quote_data, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
+    for _, row in edited_df.iterrows():
+        if pd.notna(row["Part Number"]):
+            qty = st.number_input(f"Quantity for {row['Part Number']}", min_value=1, value=1, key=row['Part Number'])
+            msrp_total = row["MSRP EA"] * qty
+            cost_total = row["Cost EA"] * qty
+            customer_price = cost_total * (1 + parts_markup / 100)
+            total_cost_per_build = cost_total
+            quote_items.append([row["Part Number"], row["Description"], row["MSRP EA"], "-", customer_price, qty, msrp_total, row["Cost EA"], total_cost_per_build, labor_hours])
+    
+    quote_df = pd.DataFrame(quote_items, columns=["Part Number", "Description", "MSRP EA", "MSRP Multiple", "Price EA", "Quantity", "Total", "Cost EA", "Total Cost Per Build", "Labor Hrs Per Part"])
     
     st.success("Quote generated successfully!")
     st.write("### Quote Summary")
@@ -88,3 +86,6 @@ if st.button("Generate Quote"):
     
     with open(pdf_output_path, "rb") as pdf_file:
         st.download_button("Download Quote PDF", pdf_file, file_name="quote.pdf", mime="application/pdf")
+
+
+    
