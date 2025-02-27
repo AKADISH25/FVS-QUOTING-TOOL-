@@ -3,9 +3,19 @@ import streamlit as st
 import pandas as pd
 from fpdf import FPDF
 
-# Load MASTER PARTS TABLE from Excel file
+# File uploader to allow users to upload the MASTER PARTS TABLE
+st.sidebar.header("Upload MASTER PARTS TABLE")
+uploaded_file = st.sidebar.file_uploader("Upload MASTER PARTS TABLE (.xlsx)", type=["xlsx"])
+
+# Define file path
 excel_file_path = "/mnt/data/MASTER PARTS TABLE .xlsx"
 
+if uploaded_file is not None:
+    with open(excel_file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    st.sidebar.success("File uploaded successfully! Reload the app to apply changes.")
+
+# Load MASTER PARTS TABLE from Excel file
 if os.path.exists(excel_file_path):
     try:
         parts_list = pd.read_excel(excel_file_path)
