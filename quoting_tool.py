@@ -69,7 +69,6 @@ if st.button("Generate Quote"):
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt=f"Quote: {quote_number}", ln=True, align='C')
     pdf.cell(200, 10, txt=f"Company: {company_name}", ln=True, align='C')
-    pdf.cell(200, 10, txt=f"Customer: {customer_name}", ln=True, align='C')
     pdf.cell(200, 10, txt=f"Due Date: {due_date}", ln=True, align='C')
     pdf.ln(10)
     
@@ -81,5 +80,3 @@ if st.button("Generate Quote"):
     
     with open(pdf_output_path, "rb") as pdf_file:
         st.download_button("Download Quote PDF", pdf_file, file_name="quote.pdf", mime="application/pdf")
-
-    
